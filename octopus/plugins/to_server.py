@@ -1,7 +1,7 @@
 from rcon.source import Client
 from config import *
 import json
-from nonebot import on_command, CommandSession, _bot, log
+from nonebot import on_command, CommandSession, log, get_bot
 import aiocqhttp
 
 try:
@@ -36,7 +36,7 @@ async def setPlayerName(session: CommandSession):
         json.dump(playernameMap, file)
     await session.send('设置完成')
 
-@_bot.on_message
+@get_bot().on_message
 async def forward(event: aiocqhttp.Event):
     if event.group_id != GROUP_ID:
         return
