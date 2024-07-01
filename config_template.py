@@ -12,3 +12,5 @@ RCON_PASSWD = ''
 GROUP_ID = 11111111
 PLAYERNAME_MAP_PATH = './names.json'
 SERVER_ROOT = '../GTNH/'
+LOG_IDENTIFIER = '[Server thread/INFO] [net.minecraft.server.MinecraftServer/]: '
+CHECK_INTERVAL = 1

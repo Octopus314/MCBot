@@ -10,7 +10,7 @@ except FileNotFoundError:
     if not DEBUG:
         exit(0)
 
-@nonebot.scheduler.scheduled_job('interval', seconds = 5)
+@nonebot.scheduler.scheduled_job('interval', seconds = CHECK_INTERVAL)
 async def _():
     bot = nonebot.get_bot()
     while True:
