@@ -45,7 +45,7 @@ async def forward(event: aiocqhttp.Event):
         name = playernameMap[qq]
     else:
         name = event.sender['card']
-    text = '<' + name + '> ' + event.message
+    text = '<' + name + '> ' + event.raw_message
     if rcon:
         command = '/tellraw @a \"{}\"'.format(text)
         rcon.run(command)
