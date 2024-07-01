@@ -20,5 +20,4 @@ async def _():
         line = line.split(LOG_IDENTIFIER, 1)
         if len(line) == 1:
             continue
-        print(line[1])
         await nonebot.get_bot().send_group_msg(group_id = GROUP_ID, message = line[1])
