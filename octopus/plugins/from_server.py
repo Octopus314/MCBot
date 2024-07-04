@@ -21,3 +21,8 @@ async def _():
         if len(line) == 1:
             continue
         await nonebot.get_bot().send_group_msg(group_id = GROUP_ID, message = line[1])
+
+@nonebot.scheduler.scheduled_job('cron', day = '*')
+async def _():
+    logFile.seek(0, 2)
+    nonebot.log.logger.info('New day, reseek logger file. ')
