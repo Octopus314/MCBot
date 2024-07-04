@@ -22,7 +22,7 @@ async def _():
             continue
         await nonebot.get_bot().send_group_msg(group_id = GROUP_ID, message = line[1])
 
-@nonebot.scheduler.scheduled_job('cron', day = '*', second = 1)
+@nonebot.scheduler.scheduled_job('cron', day = '*', hour = 0, minute = 0, second = 1)
 async def _():
     logFile.seek(0, 2)
     nonebot.log.logger.info('New day, reseek logger file. ')
