@@ -36,6 +36,18 @@ async def setPlayerName(session: CommandSession):
         json.dump(playernameMap, file)
     await session.send('设置完成')
 
+@on_command('/whoami', permission=lambda sender: sender.is_groupchat, only_to_me=False)
+async def getPlayerName(session: CommandSession):
+    if session.event.group_id != GROUP_ID:
+        return
+    qq = str(session.event.user_id)
+    if qq in playernameMap:
+        await session.send(playernameMap[qq])
+        return
+    else:
+        await session.send("你是？")
+        return
+
 @get_bot().on_message
 async def forward(event: aiocqhttp.Event):
     if event.group_id != GROUP_ID:
