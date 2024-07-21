@@ -3,6 +3,12 @@ from config import *
 import json
 from nonebot import on_command, CommandSession, log, get_bot
 from aiocqhttp import Event, Message, MessageSegment
+import requests
+from PIL import Image, ImageOps
+import minecraftmap
+from nbt import nbt
+import os
+import io
 
 try:
     rcon = Client(host=RCON_HOST, port=RCON_PORT, passwd=RCON_PASSWD)
@@ -15,11 +21,21 @@ except ConnectionError:
         exit(0)
 
 try:
-    with open(PLAYERNAME_MAP_PATH, 'r') as file:
-        playernameMap: dict[str, str] = json.load(file)
-        log.logger.debug(str(playernameMap))
+    with open(RUNTIME, 'r') as file:
+        runtime = json.load(file)
+        playernameMap: dict[str, str] = runtime['names']
+        mapNum: int = runtime['map_num']
+        log.logger.debug(str(runtime))
 except FileNotFoundError | json.JSONDecodeError:
     playernameMap: dict[str, str] = {}
+    mapNum = 100
+    runtime = {}
+    runtime['names'] = playernameMap
+    runtime['map_num'] = mapNum
+
+def save() -> None:
+    with open(RUNTIME, 'w') as file:
+        json.dump(runtime, file)
 
 bot = get_bot()
     
@@ -28,6 +44,31 @@ def getName(qq: str) -> str | None:
         return playernameMap[qq]
     else:
         return None
+
+def convertImage(url: str) -> int:
+    global mapNum
+    req = requests.get(url)
+    img = Image.open(io.BytesIO(req.content))
+    w, h = img.size
+    w /= 2
+    h /= 2
+    r = max(w, h)
+    img = img.crop((w-r, h-r, w+r, h+r))
+    img = ImageOps.fit(img, (128, 128))
+    map = minecraftmap.Map()
+    map.file['data']['trackingPosition'].value = 0
+    map.file['data'].tags.append(nbt.TAG_Byte(value=1, name='locked'))
+    map.im = img
+    map.imagetonbt()
+    num = mapNum
+    map_name = 'map_' + str(mapNum) + '.dat'
+    map.savenbt(os.path.join(SERVER_ROOT, WORLD, 'data', map_name))
+    mapNum += 1
+    save()
+    removePath = os.path.join(SERVER_ROOT, WORLD, 'data', 'map_' + str(mapNum - MAX_MAP_NUM) + '.dat')
+    if os.path.exists(removePath):
+        os.remove(removePath)
+    return num
 
 @on_command('/setplayername', permission=lambda sender: sender.is_groupchat, only_to_me=False)
 async def setPlayerName(session: CommandSession):
@@ -40,8 +81,7 @@ async def setPlayerName(session: CommandSession):
     name = name.split(' ')[0]
     qq = str(session.event.user_id)
     playernameMap[qq] = name
-    with open(PLAYERNAME_MAP_PATH, 'w') as file:
-        json.dump(playernameMap, file)
+    save()
     await session.send('设置完成')
 
 @on_command('/whoami', permission=lambda sender: sender.is_groupchat, only_to_me=False)
@@ -72,13 +112,18 @@ async def forward(event: Event):
         segment: MessageSegment
         type = segment.type
         if type == 'text':
-            raw += str(segment)
+            raw += '\"' + str(segment) + '\",'
             continue
         if type == 'image':
-            raw += '[图片]'
+            try:
+                num = convertImage(segment.data['url'])
+                raw += '{\"text\":\"[图片]\",\"color\":\"blue\",\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/give @p minecraft:filled_map{map:%d}\"}},' % num
+            except Exception as e:
+                raise e
+                raw += '\"[图片]\",'
             continue
         if type == 'reply':
-            raw += '回复'
+            raw += '\"回复 \",'
             continue
         if type == 'at':
             targ_qq = segment.data['qq']
@@ -86,10 +131,12 @@ async def forward(event: Event):
             if not targ_name:
                 member = await bot.get_group_member_info(group_id=event.group_id, user_id=targ_qq)
                 targ_name = member['card']
-            raw += '@' + targ_name + ' '
-    if len(raw) == 0:
+            raw += '\"@' + targ_name + ' \",'
+    raw = raw[:-1]
+    raw += ']'
+    if len(raw) <= 3:
         return
-    text = '<' + name + '> ' + raw
+    text = '[\"<' + name + '> \",' + raw
     if rcon:
-        command = '/tellraw @a \"{}\"'.format(text)
+        command = '/tellraw @a {}'.format(text)
         rcon.run(command)
