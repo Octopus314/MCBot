@@ -34,6 +34,7 @@ except FileNotFoundError | json.JSONDecodeError:
     runtime['map_num'] = mapNum
 
 def save() -> None:
+    runtime['map_num'] = mapNum
     with open(RUNTIME, 'w') as file:
         json.dump(runtime, file)
 
@@ -61,8 +62,8 @@ def convertImage(url: str) -> int:
     map.im = img
     map.imagetonbt()
     num = mapNum
-    map_name = 'map_' + str(mapNum) + '.dat'
-    map.savenbt(os.path.join(SERVER_ROOT, WORLD, 'data', map_name))
+    mapPath = os.path.join(SERVER_ROOT, WORLD, 'data', 'map_' + str(mapNum) + '.dat')
+    map.savenbt(mapPath)
     mapNum += 1
     save()
     removePath = os.path.join(SERVER_ROOT, WORLD, 'data', 'map_' + str(mapNum - MAX_MAP_NUM) + '.dat')
@@ -117,6 +118,7 @@ async def forward(event: Event):
         if type == 'image':
             try:
                 num = convertImage(segment.data['url'])
+                log.logger.info('Converted image to map %d' % num)
                 raw += '{\"text\":\"[图片]\",\"color\":\"blue\",\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/give @p minecraft:filled_map{map:%d}\"}},' % num
             except Exception as e:
                 raise e
