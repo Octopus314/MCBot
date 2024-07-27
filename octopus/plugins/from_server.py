@@ -28,9 +28,5 @@ async def _():
         line = line[:-1] # remove \n
         if not needForward(line):
             continue
-        await nonebot.get_bot().send_group_msg(group_id = GROUP_ID, message = line)
-
-@nonebot.scheduler.scheduled_job('cron', day = '*', hour = 0, minute = 0, second = 1)
-async def _():
+        await bot.send_group_msg(group_id = GROUP_ID, message = line)
     logFile.seek(0, 2)
-    nonebot.log.logger.info('New day, reseek logger file. ')
