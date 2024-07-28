@@ -3,8 +3,10 @@ from config import *
 import nonebot
 import re
 
+LOG_PATH = os.path.join(SERVER_ROOT, 'logs/latest.log')
+
 try:
-    logFile = open(os.path.join(SERVER_ROOT, 'logs/latest.log'))
+    logFile = open(LOG_PATH)
     logFile.seek(0, 2)
 except FileNotFoundError:
     nonebot.log.logger.error('Unable to open log file, maybe server not started? ')
@@ -17,6 +19,9 @@ def needForward(str: str) -> bool:
 @nonebot.scheduler.scheduled_job('interval', seconds = CHECK_INTERVAL)
 async def _():
     bot = nonebot.get_bot()
+    if os.path.getsize(LOG_PATH) < logFile.tell():
+        nonebot.log.logger.info("Reseeking log file.")
+        logFile.seek(0, 2)
     while True:
         line = logFile.readline()
         if not line:
@@ -29,4 +34,3 @@ async def _():
         if not needForward(line):
             continue
         await bot.send_group_msg(group_id = GROUP_ID, message = line)
-    logFile.seek(0, 2)
