@@ -45,6 +45,18 @@ def getName(qq: str) -> str | None:
         return playernameMap[qq]
     else:
         return None
+    
+async def executeRcon(command: str):
+    global rcon
+    if not rcon:
+        return
+    try:
+        rcon.run(command)
+    except Exception:
+        rcon = None
+        await bot.send_group_msg(message = 'Server disconnected. \nUse /connectrcon to reconnect.', group_id = GROUP_ID)
+        log.logger.warn('Rcon disconnected.')
+
 
 def convertImage(url: str) -> int:
     global mapNum
@@ -96,6 +108,23 @@ async def getPlayerName(session: CommandSession):
     else:
         await session.send("你是？")
         return
+    
+@on_command('/connectrcon', permission=lambda sender: sender.is_groupchat, only_to_me=False)
+async def connectRcon(session: CommandSession):
+    global rcon
+    if session.event.group_id != GROUP_ID:
+        return
+    if rcon:
+        await session.send('Rcon already connected.')
+        return
+    try:
+        rcon = Client(host=RCON_HOST, port=RCON_PORT, passwd=RCON_PASSWD)
+        rcon.connect(True)
+        await session.send('Reconnected.')
+        log.logger.info('Rcon reconnected.')
+    except ConnectionError:
+        rcon = None
+        await session.send('Reconnect failed.')
 
 @bot.on_message
 async def forward(event: Event):
@@ -139,6 +168,5 @@ async def forward(event: Event):
     if len(raw) <= 3:
         return
     text = '[\"<' + name + '> \",' + raw
-    if rcon:
-        command = '/tellraw @a {}'.format(text)
-        rcon.run(command)
+    command = '/tellraw @a {}'.format(text)
+    await executeRcon(command)
