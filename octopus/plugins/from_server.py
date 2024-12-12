@@ -14,7 +14,7 @@ except FileNotFoundError:
         exit(0)
 
 def needForward(str: str) -> bool:
-    return re.match('<.*>', str) or str.endswith(' the game')
+    return re.match('<.*>', str) or str.endswith(' the game') or str.find('Done') != -1
 
 @nonebot.scheduler.scheduled_job('interval', seconds = CHECK_INTERVAL)
 async def _():
