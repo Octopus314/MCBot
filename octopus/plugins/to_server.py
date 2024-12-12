@@ -167,6 +167,9 @@ async def forward(event: Event):
     raw += ']'
     if len(raw) <= 3:
         return
+    if len(raw) >= MAX_MESSAGE_LENGTH:
+        await bot.send_group_msg(group_id=GROUP_ID, message=MessageSegment.reply(event.message_id) + MessageSegment.text("刷屏踢了"))
+        return
     text = '[\"<' + name + '> \",' + raw
     command = '/tellraw @a {}'.format(text)
     await executeRcon(command)

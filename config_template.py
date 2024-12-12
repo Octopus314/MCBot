@@ -16,3 +16,4 @@ WORLD = 'world'
 LOG_IDENTIFIER = '[Server thread/INFO] [net.minecraft.server.MinecraftServer/]: '
 CHECK_INTERVAL = 1
 MAX_MAP_NUM = 8
+MAX_MESSAGE_LENGTH = 256
