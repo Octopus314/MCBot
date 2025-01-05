@@ -10,12 +10,19 @@ from nbt import nbt
 import os
 import io
 
-try:
-    rcon = Client(host=RCON_HOST, port=RCON_PORT, passwd=RCON_PASSWD)
-    rcon.connect(True)
+def connectRcon() -> bool:
+    global rcon
+    try: 
+        rcon = Client(host=RCON_HOST, port=RCON_PORT, passwd=RCON_PASSWD)
+        rcon.connect(True)
+        return True
+    except ConnectionError:
+        rcon = None
+        return False
+
+if connectRcon():
     log.logger.info('Rcon connected.')
-except ConnectionError:
-    rcon = None
+else:
     log.logger.error('Unable to connect rcon.')
     if not DEBUG:
         exit(0)
@@ -53,9 +60,11 @@ async def executeRcon(command: str):
     try:
         rcon.run(command)
     except Exception:
-        rcon = None
-        await bot.send_group_msg(message = 'Server disconnected. \nUse /connectrcon to reconnect.', group_id = GROUP_ID)
-        log.logger.warn('Rcon disconnected.')
+        if connectRcon(): # retry once
+            rcon.run(command)
+        else:
+            await bot.send_group_msg(message = 'Server disconnected. \nUse /connectrcon to reconnect.', group_id = GROUP_ID)
+            log.logger.warn('Rcon disconnected.')
 
 
 def convertImage(url: str) -> int:
@@ -117,13 +126,10 @@ async def connectRcon(session: CommandSession):
     if rcon:
         await session.send('Rcon already connected.')
         return
-    try:
-        rcon = Client(host=RCON_HOST, port=RCON_PORT, passwd=RCON_PASSWD)
-        rcon.connect(True)
+    if connectRcon():
         await session.send('Reconnected.')
         log.logger.info('Rcon reconnected.')
-    except ConnectionError:
-        rcon = None
+    else:
         await session.send('Reconnect failed.')
 
 @bot.on_message
