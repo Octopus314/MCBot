@@ -47,11 +47,15 @@ def save() -> None:
 
 bot = get_bot()
     
-def getName(qq: str) -> str | None:
+async def getName(qq: str, group_id: int) -> str | None:
     if qq in playernameMap:
         return playernameMap[qq]
-    else:
-        return None
+    member = await bot.get_group_member_info(group_id=group_id, user_id=qq)
+    name = member['card']
+    if name:
+        return name
+    stranger = await bot.get_stranger_info(user_id=qq)
+    return stranger['nickname']
     
 async def executeRcon(command: str):
     global rcon
@@ -137,9 +141,7 @@ async def forward(event: Event):
     if event.group_id != GROUP_ID:
         return
     qq = str(event.user_id)
-    name = getName(qq)
-    if not name:
-        name = event.sender['card']
+    name = await getName(qq, event.group_id)
     message: Message = event.message
     if not message:
         return
@@ -164,10 +166,7 @@ async def forward(event: Event):
             continue
         if type == 'at':
             targ_qq = segment.data['qq']
-            targ_name = getName(targ_qq)
-            if not targ_name:
-                member = await bot.get_group_member_info(group_id=event.group_id, user_id=targ_qq)
-                targ_name = member['card']
+            targ_name = await getName(targ_qq, event.group_id)
             raw += '\"@' + targ_name + ' \",'
     raw = raw[:-1]
     raw += ']'
