@@ -119,7 +119,7 @@ async def getPlayerName(session: CommandSession):
         return
     
 @on_command('/connectrcon', permission=lambda sender: sender.is_groupchat, only_to_me=False)
-async def connectRcon(session: CommandSession):
+async def reconnectRcon(session: CommandSession):
     global rcon
     if session.event.group_id != GROUP_ID:
         return
