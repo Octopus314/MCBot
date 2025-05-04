@@ -67,7 +67,7 @@ async def executeRcon(command: str):
         if connectRcon(): # retry once
             rcon.run(command)
         else:
-            await bot.send_group_msg(message = 'Server disconnected. \nUse /connectrcon to reconnect.', group_id = GROUP_ID)
+            await bot.send_group_msg(message = '服挂了\n用/connect重连试试', group_id = GROUP_ID)
             log.logger.warn('Rcon disconnected.')
 
 
@@ -96,7 +96,7 @@ def convertImage(url: str) -> int:
         os.remove(removePath)
     return num
 
-@on_command('/setplayername', permission=lambda sender: sender.is_groupchat, only_to_me=False)
+@on_command('/iam', permission=lambda sender: sender.is_groupchat, only_to_me=False)
 async def setPlayerName(session: CommandSession):
     if session.event.group_id != GROUP_ID:
         return
@@ -122,19 +122,19 @@ async def getPlayerName(session: CommandSession):
         await session.send("你是？")
         return
     
-@on_command('/connectrcon', permission=lambda sender: sender.is_groupchat, only_to_me=False)
+@on_command('/connect', permission=lambda sender: sender.is_groupchat, only_to_me=False)
 async def reconnectRcon(session: CommandSession):
     global rcon
     if session.event.group_id != GROUP_ID:
         return
     if rcon:
-        await session.send('Rcon already connected.')
+        await session.send('服没似')
         return
     if connectRcon():
-        await session.send('Reconnected.')
+        await session.send('连上了')
         log.logger.info('Rcon reconnected.')
     else:
-        await session.send('Reconnect failed.')
+        await session.send('没连上，你再看看')
 
 @bot.on_message
 async def forward(event: Event):
