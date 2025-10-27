@@ -145,6 +145,8 @@ async def forward(event: Event):
     message: Message = event.message
     if not message:
         return
+    if message.extract_plain_text().find("latte03396 joined the game") != -1: # latte03396 joined the game
+        await bot.send_group_msg(group_id=GROUP_ID, message=MessageSegment.reply(event.message_id) + MessageSegment.text("滚出去"))
     raw = ''
     for segment in message:
         segment: MessageSegment
@@ -158,7 +160,6 @@ async def forward(event: Event):
                 log.logger.info('Converted image to map %d' % num)
                 raw += '{\"text\":\"[图片]\",\"color\":\"blue\",\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/give @p minecraft:filled_map{map:%d}\"}},' % num
             except Exception as e:
-                raise e
                 raw += '\"[图片]\",'
             continue
         if type == 'reply':
