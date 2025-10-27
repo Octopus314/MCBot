@@ -25,5 +25,5 @@ async def queryPlayers(session: CommandSession):
     stats = query.get_full_stats()
     players: list[str] = stats['players']
     players = list(map(lambda player: player[:-4], players)) # remove last \x1b[0m
-    message = '\n'.join(players) if len(players) == 0 else '全部睡觉' 
+    message = '\n'.join(players) if len(players) != 0 and len(players[0]) != 0 else '全部睡觉' # return ['\x1b[0m'] when no players online
     await bot.send_group_msg(message=message , group_id=GROUP_ID)
