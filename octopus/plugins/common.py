@@ -11,7 +11,7 @@ async def _():
 @nonebot.on_notice
 async def _(event: nonebot.NoticeSession):
     event = event.event
-    if event['group_id'] != GROUP_ID or event['notice_type'] != 'group_card' or event['card_new'] == '':
+    if event['notice_type'] != 'group_card' or event['group_id'] != GROUP_ID or event['user_id'] != SELF_ID or event['card_new'] == '':
         return
     await bot.send_group_msg(message = f"谁给我改的{event['card_new']}", group_id = GROUP_ID)
     await bot.set_group_card(group_id = GROUP_ID, user_id = SELF_ID, card = '')
