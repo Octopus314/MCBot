@@ -30,11 +30,11 @@ PROMPT = """
 "confidence": 0.0 到 1.0,
 "target_messages_checked": 0,
 "mute_messages": [
-{
+{{
 "message_id": "应禁言的目标用户消息id",
 "tags": ["简短标签1", "简短标签2"],
 "reason": "一句话说明这条消息为什么应禁言"
-}
+}}
 ],
 "reason": "整体判断的一句话总结"
 }}
