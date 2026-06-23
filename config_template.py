@@ -1,6 +1,5 @@
 from nonebot.default_config import *
 
-DEBUG = True
 SUPERUSERS = {}
 COMMAND_START = {''}
 COMMAND_SEP = {}

@@ -1,3 +1,4 @@
 __pycache__/
 runtime.json
 config.py
+logs/
