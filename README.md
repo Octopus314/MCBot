@@ -1,7 +1,1 @@
-dependencies:
-```bash
-pip install 'nonebot[scheduler]'
-pip install rcon
-pip install minecraftmap
-pip install mctools
-```
+A QQ group bot using nonebot framework capable of synchronizing messages and pictures between the group and a Minecraft server.

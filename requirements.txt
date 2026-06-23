@@ -1,0 +1,4 @@
+nonebot[scheduler]
+rcon
+minecraftmap
+mctools
