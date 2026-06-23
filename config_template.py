@@ -18,8 +18,17 @@ LOG_IDENTIFIER = '[Server thread/INFO] [net.minecraft.server.MinecraftServer/]: 
 CHECK_INTERVAL = 1
 MAX_MAP_NUM = 8
 MAX_MESSAGE_LENGTH = 256
+
 LLM_API_KEY = ''
 LLM_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/'
 LLM_MODEL = 'gemini-3.1-flash-lite'
 LLM_TIMEOUT = 60.0
 LLM_MAX_RETRIES = 2
+LATTE_ID = 1234567890
+LATTE_MUTE_THRESHOLD = 0.8
+RECENT_MESSAGE_LIMIT = 25
+LATTE_CHECK_INTERVAL = 5
+LATTE_MUTE_DURATION = 60
+LATTE_IMAGE_NAME_MAP: dict[str, str] = {
+    "A25718E642427CAAF34CFBD329007EF8": "这小学生"
+}

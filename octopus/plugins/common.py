@@ -13,18 +13,9 @@ import aiocqhttp
 from aiocqhttp import MessageSegment
 from aiocqhttp.exceptions import ApiNotAvailable
 from nonebot import on_command, CommandSession
+from config import *
 
 bot = nonebot.get_bot()
-LATTE = 1872230241
-RECENT_MESSAGE_LIMIT = 25
-LATTE_CHECK_INTERVAL = 5
-LATTE_MUTE_DURATION = 60
-LATTE_IMAGE_NAME_MAP: dict[str, str] = {
-    "A25718E642427CAAF34CFBD329007EF8": "这小学生",
-    "2B4082A96C5B33330ED9D0802043BDDD": "这日本人",
-    "862BDF4221969D5DDB01D39E684DACC6": "册那",
-    "B99D515802EBDC2397C5D227FEC01ACE": "做狗这方面我真的不如你"
-}
 recent_messages: deque['StoredMessage'] = deque(maxlen=RECENT_MESSAGE_LIMIT)
 last_asked_latte_message: 'StoredMessage | None' = None
 latte_inflight_message: 'StoredMessage | None' = None
@@ -170,7 +161,7 @@ def build_latte_prompt(previous: StoredMessage | None, messages: list[StoredMess
     previous_text = _msg_format(previous) if previous else 'None'
     context = '\n'.join(_msg_format(message) for message in messages)
     nonebot.log.logger.debug(f'Building prompt with previous_message={previous_text} and context:\n{context}')
-    return PROMPT.format(sender=LATTE, previous_message=previous_text, context_messages=context)
+    return PROMPT.format(sender=LATTE_ID, previous_message=previous_text, context_messages=context)
 
 
 def parse_llm_json(response: str) -> dict[str, Any] | None:
@@ -193,14 +184,14 @@ def parse_llm_json(response: str) -> dict[str, Any] | None:
     return parsed
 
 
-def should_mute_latte(result: dict[str, Any], threshold: float = 0.9) -> bool:
+def should_mute_latte(result: dict[str, Any]) -> bool:
     confidence = result.get('confidence')
     if not isinstance(confidence, (int, float)):
         return False
     nonebot.log.logger.info(f'LLM confidence: {confidence}')
     mute_messages = result.get('mute_messages')
     return result.get('should_mute') is True and \
-        isinstance(confidence, (int, float)) and confidence >= threshold and \
+        isinstance(confidence, (int, float)) and confidence >= LATTE_MUTE_THRESHOLD and \
         isinstance(mute_messages, list) and len(mute_messages) > 0
 
 
@@ -222,9 +213,9 @@ def mute_target_info(result: dict[str, Any], fallback: StoredMessage) -> tuple[i
 
 
 async def mute_latte(duration: int = LATTE_MUTE_DURATION) -> None:
-    await bot.set_group_ban(group_id=GROUP_ID, user_id=LATTE, duration=duration)
+    await bot.set_group_ban(group_id=GROUP_ID, user_id=LATTE_ID, duration=duration)
     await asyncio.sleep(5)
-    await bot.set_group_ban(group_id=GROUP_ID, user_id=LATTE, duration=0)
+    await bot.set_group_ban(group_id=GROUP_ID, user_id=LATTE_ID, duration=0)
 
 
 @bot.on_message
@@ -248,7 +239,7 @@ async def check_latte_messages():
     global latte_check_task
 
     messages = list(recent_messages)
-    latest_latte_message = next((message for message in reversed(messages) if message.user_id == LATTE), None)
+    latest_latte_message = next((message for message in reversed(messages) if message.user_id == LATTE_ID), None)
     if not latest_latte_message:
         return
     if _same_message(latest_latte_message, last_asked_latte_message):
@@ -299,7 +290,7 @@ async def process_latte_messages(
     nonebot.log.logger.debug(f'LLM JSON result through message {latest_latte_message.message_id}: {result}')
 
 
-    if should_mute_latte(result, threshold=0.9):
+    if should_mute_latte(result):
         target_message_id, reason = mute_target_info(result, latest_latte_message)
         nonebot.log.logger.info(f'Muting Latte because {reason}')
         await bot.send_group_msg(
