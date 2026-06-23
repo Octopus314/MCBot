@@ -170,7 +170,7 @@ def build_latte_prompt(previous: StoredMessage | None, messages: list[StoredMess
     previous_text = _msg_format(previous) if previous else 'None'
     context = '\n'.join(_msg_format(message) for message in messages)
     nonebot.log.logger.debug(f'Building prompt with previous_message={previous_text} and context:\n{context}')
-    return PROMPT.format(previous_message=previous_text, context_messages=context)
+    return PROMPT.format(sender=LATTE, previous_message=previous_text, context_messages=context)
 
 
 def parse_llm_json(response: str) -> dict[str, Any] | None:
@@ -193,9 +193,15 @@ def parse_llm_json(response: str) -> dict[str, Any] | None:
     return parsed
 
 
-def should_mute_latte(result: dict[str, Any]) -> bool:
+def should_mute_latte(result: dict[str, Any], threshold: float = 0.9) -> bool:
+    confidence = result.get('confidence')
+    if not isinstance(confidence, (int, float)):
+        return False
+    nonebot.log.logger.info(f'LLM confidence: {confidence}')
     mute_messages = result.get('mute_messages')
-    return result.get('should_mute') is True and isinstance(mute_messages, list) and len(mute_messages) > 0
+    return result.get('should_mute') is True and \
+        isinstance(confidence, (int, float)) and confidence >= threshold and \
+        isinstance(mute_messages, list) and len(mute_messages) > 0
 
 
 def mute_target_info(result: dict[str, Any], fallback: StoredMessage) -> tuple[int, str]:
@@ -272,7 +278,7 @@ async def process_latte_messages(
 
     latte_inflight_message = latest_latte_message
     try:
-        nonebot.log.logger.debug(f'Sending LLM request through message {latest_latte_message.message_id}')
+        nonebot.log.logger.info(f'Sending LLM request through message {latest_latte_message.message_id}')
         response = await ask_llm(prompt)
         nonebot.log.logger.debug(f'LLM response through message {latest_latte_message.message_id}: {response}')
         result = parse_llm_json(response)
@@ -292,7 +298,8 @@ async def process_latte_messages(
     last_asked_latte_message = latest_latte_message
     nonebot.log.logger.debug(f'LLM JSON result through message {latest_latte_message.message_id}: {result}')
 
-    if should_mute_latte(result):
+
+    if should_mute_latte(result, threshold=0.9):
         target_message_id, reason = mute_target_info(result, latest_latte_message)
         nonebot.log.logger.info(f'Muting Latte because {reason}')
         await bot.send_group_msg(
