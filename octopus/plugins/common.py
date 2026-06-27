@@ -214,6 +214,11 @@ def mute_target_info(result: dict[str, Any], fallback: StoredMessage) -> tuple[i
 
 async def mute_latte(duration: int = LATTE_MUTE_DURATION) -> None:
     await bot.set_group_ban(group_id=GROUP_ID, user_id=LATTE_ID, duration=duration)
+    recent_messages.append(StoredMessage(
+        message_id="NaN",
+        user_id="System",
+        text=f'{LATTE_ID} 已被禁言 {duration} 秒',
+    ))
     await asyncio.sleep(5)
     await bot.set_group_ban(group_id=GROUP_ID, user_id=LATTE_ID, duration=0)
 
